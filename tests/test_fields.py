@@ -66,12 +66,70 @@ class TestField(unittest.TestCase):
         with self.assertRaises(TypeError):
             R(**dict(argfield=value))
 
-    @cases([{'FOObar': '12345'}, {}, {'foobar': 1234, 'spam': 'eggs'}])
+    @cases(['foo@bar.com', 'stupnikov@otus.ru', 'eggs@spam.uk',
+            'all@otus.rocks', 'b@egg.org'])
     def test_good_email(self, value):
         r = R(**dict(email=value))
         self.assertEqual(r.email, value)
 
-    @cases(['Foobar', 123456787, []])
+    @cases(['foobar.com', 'Foobar', 'Spam@eggs'])
     def test_bad_email(self, value):
-        with self.assertRaises(TypeError):
+        with self.assertRaises(ValueError):
             R(**dict(email=value))
+
+    @cases(['79121233239', 79011122233, '79998887766'])
+    def test_good_phone(self, value):
+        r = R(**dict(phone=value))
+        self.assertEqual(r.phone, str(value))
+
+    @cases(['Foobar', 89123456789, '+79201234567', '789012345'])
+    def test_bad_phone(self, value):
+        with self.assertRaises(ValueError):
+            R(**dict(phone=str(value)))
+
+    @cases(['27.12.2021', '01.01.1982', '06.11.1904'])
+    def test_good_date(self, value):
+        r = R(**dict(date=value))
+        self.assertEqual(r.date, value)
+
+    @cases(['2712.2021', '01011982', '06.11.19042'])
+    def test_bad_date(self, value):
+        with self.assertRaises(ValueError):
+            R(**dict(date=value))
+
+    @cases(['27.12.2021', '01.01.1982', '06.11.1958'])
+    def test_good_birthday(self, value):
+        r = R(**dict(birthday=value))
+        self.assertEqual(r.birthday, value)
+
+    @cases(['27.12.1900', '18.09.1867', '01.01.1000'])
+    def test_bad_birthday(self, value):
+        with self.assertRaises(ValueError):
+            R(**dict(birthday=value))
+
+    @cases([1, 2, 0])
+    def test_gender(self, value):
+        r = R(**dict(gender=value))
+        self.assertEqual(r.gender, value)
+
+    @cases([3, '1', 'male', 42, '13', 'Foobar', -1])
+    def test_gender_bad_value(self, value):
+        with self.assertRaises(ValueError):
+            R(**dict(gender=value))
+
+    @cases([
+            [123, 323, 98765],
+            [1, 2, 42, 12148124124],
+            [42], []
+        ])
+    def test_clientids(self, value):
+        r = R(**dict(clientids=value))
+        self.assertEqual(r.clientids, value)
+
+    @cases([
+            3, '1', "[42, 42]", ['1', '2'],
+            'male', 42, '13', 'Foobar', -1
+        ])
+    def test_clientids_bad_value(self, value):
+        with self.assertRaises(ValueError):
+            R(**dict(clientids=value))

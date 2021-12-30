@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-import datetime
+from datetime import datetime
 import re
 
 from api import FEMALE, MALE, UNKNOWN
@@ -69,7 +69,7 @@ class EmailField(CharField):
         if value is None:
             return
         if not re.fullmatch(EmailField.regex, value):
-            raise TypeError(
+            raise ValueError(
                 f'Bad email in field {self.name} ({value!r} not valid)'
             )
 
@@ -84,7 +84,7 @@ class PhoneField(Field):
         if value is None:
             return
         if not re.fullmatch(PhoneField.regex, value):
-            return ValueError(
+            raise ValueError(
                 f'Bad phone number in field {self.name} ({value!r} not valid)'
             )
 
