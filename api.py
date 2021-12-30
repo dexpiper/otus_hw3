@@ -8,35 +8,11 @@ import uuid
 from optparse import OptionParser
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
-from thetypes import (ClientsInterestsRequest, OnlineScoreRequest,
+from thetypes import (ClientsInterestsRequest, FieldError, OnlineScoreRequest,
                       MethodRequest)
 from scoring import get_interests, get_score
-
-
-SALT = "Otus"
-ADMIN_LOGIN = "admin"
-ADMIN_SALT = "42"
-OK = 200
-BAD_REQUEST = 400
-FORBIDDEN = 403
-NOT_FOUND = 404
-INVALID_REQUEST = 422
-INTERNAL_ERROR = 500
-ERRORS = {
-    BAD_REQUEST: "Bad Request",
-    FORBIDDEN: "Forbidden",
-    NOT_FOUND: "Not Found",
-    INVALID_REQUEST: "Invalid Request",
-    INTERNAL_ERROR: "Internal Server Error",
-}
-UNKNOWN = 0
-MALE = 1
-FEMALE = 2
-GENDERS = {
-    UNKNOWN: "unknown",
-    MALE: "male",
-    FEMALE: "female",
-}
+from vars import (ADMIN_SALT, SALT, INVALID_REQUEST, OK, FORBIDDEN,
+                  NOT_FOUND, BAD_REQUEST, INTERNAL_ERROR, ERRORS)
 
 
 def check_auth(request) -> bool:
@@ -64,8 +40,8 @@ def online_score_handler(args: dict, ctx: dict, store,
                          is_admin=False) -> tuple:
     try:
         request = OnlineScoreRequest(args)
-    except Exception as exc:
-        return exc, INVALID_REQUEST
+    except FieldError as exc:
+        return str(exc), INVALID_REQUEST
     request.has = [
         name for name, value in request.__dict__.items()
         if not name.startswith('_') and value
@@ -94,9 +70,10 @@ def clients_interests_handler(args: dict, ctx: dict, store,
                               is_admin=False) -> tuple:
     try:
         request = ClientsInterestsRequest(args)
-    except Exception as exc:
-        return exc, INVALID_REQUEST
-    ctx.update(nclients=len(request.client_ids))
+    except FieldError as exc:
+        return str(exc), INVALID_REQUEST
+    nclients = len(request.client_ids)
+    ctx.update(nclients=nclients)
     response = {
         id: get_interests(store, cid=None)
         for id in request.client_ids
@@ -108,23 +85,24 @@ def clients_interests_handler(args: dict, ctx: dict, store,
 def method_handler(request: dict, ctx: dict, store) -> tuple:
     response, code = None, None
     data = request['body']
+
     try:
         method_request = MethodRequest(data)
-    except Exception as exc:
-        return exc, INVALID_REQUEST
+    except FieldError as exc:
+        return str(exc), INVALID_REQUEST
 
     if not check_auth(method_request):
-        return 'Invalid token', FORBIDDEN
+        return 'Forbidden', FORBIDDEN
 
     methods = {'online_score': online_score_handler,
                'clients_interests': clients_interests_handler}
-    method = method_request.method.value
+    method = method_request.method
     if method not in methods:
         response = f'Invalid method name ({method}) in field method'
         code = NOT_FOUND
         return response, code
-    response, code = methods[method](method.arguments, ctx,
-                                     store, is_admin=method.is_admin)
+    response, code = methods[method](method_request.arguments, ctx,
+                                     store, is_admin=method_request.is_admin)
     return response, code
 
 

@@ -2,7 +2,11 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 import re
 
-from api import FEMALE, MALE, UNKNOWN, ADMIN_LOGIN
+from vars import FEMALE, MALE, UNKNOWN, ADMIN_LOGIN
+
+
+class FieldError(Exception):
+    pass
 
 
 class Validator(ABC):
@@ -32,11 +36,11 @@ class Field(Validator):
     def validate(self, value):
         cond1 = False if self.required and value is None else True
         if not cond1:
-            raise LookupError(f'Field {self.name} should be in request')
+            raise FieldError(f'Field {self.name} should be in request')
         cond2 = (False if not self.nullable and value in ('', [], {})
                  else True)
         if not cond2:
-            raise ValueError(f'Field {self.name} cannot be empty')
+            raise FieldError(f'Field {self.name} cannot be empty')
 
 
 class CharField(Field):
@@ -44,7 +48,7 @@ class CharField(Field):
     def validate(self, value):
         super().validate(value)
         if not isinstance(value, (str, type(None))):
-            raise TypeError(f'Field {self.name} should be a str')
+            raise FieldError(f'Field {self.name} should be a str')
 
     def __set__(self, obj, value):
         self.validate(value)
@@ -56,7 +60,7 @@ class ArgumentsField(Field):
     def validate(self, value):
         super().validate(value)
         if not isinstance(value, (dict, type(None))):
-            raise TypeError(
+            raise FieldError(
                 f'Expected {value!r} in {self.name} to be dict-like object'
             )
 
@@ -69,7 +73,7 @@ class EmailField(CharField):
         if value is None:
             return
         if not re.fullmatch(EmailField.regex, value):
-            raise ValueError(
+            raise FieldError(
                 f'Bad email in field {self.name} ({value!r} not valid)'
             )
 
@@ -84,7 +88,7 @@ class PhoneField(Field):
         if value is None:
             return
         if not re.fullmatch(PhoneField.regex, value):
-            raise ValueError(
+            raise FieldError(
                 f'Bad phone number in field {self.name} ({value!r} not valid)'
             )
 
@@ -103,7 +107,7 @@ class DateField(CharField):
         try:
             datetime.strptime(value, DateField.format)
         except ValueError:
-            raise ValueError(
+            raise FieldError(
                 f'Bad date format in field {self.name} ({value!r} not valid)'
             )
 
@@ -117,7 +121,7 @@ class BirthDayField(DateField):
         date = datetime.strptime(value, DateField.format)
         delta = datetime.today() - date
         if delta.days > 365*70:
-            raise ValueError(
+            raise FieldError(
                 f'Bad date in field {self.name}: '
                 f'more than 70 years since {value!r}'
             )
@@ -131,7 +135,7 @@ class GenderField(Field):
         if value is None:
             return
         if value not in GenderField.genders:
-            raise ValueError(
+            raise FieldError(
                 f'Bad value for {self.name} field ({value!r}). '
                 'Should be an integer from {0, 1, 2}'
             )
@@ -146,21 +150,21 @@ class ClientIDsField(Field):
         err_message = (f'Bad value for {self.name} field ({value!r}). '
                        'Should be a list-like object of integers')
         if not isinstance(value, list):
-            raise ValueError(err_message)
+            raise FieldError(err_message)
         if not all(
             [True if isinstance(el, int) else False
              for el in value]
         ):
-            raise ValueError(err_message)
+            raise FieldError(err_message)
 
 
 class ClientsInterestsRequest():
     client_ids = ClientIDsField(required=True, nullable=False)
     date = DateField(required=False, nullable=True)
 
-    def __init__(self, **kwargs):
+    def __init__(self, kwargs):
         self.date = kwargs.get('date', None)
-        self.clientids = kwargs.get('clientids', None)
+        self.client_ids = kwargs.get('client_ids', None)
 
 
 class OnlineScoreRequest():
@@ -171,7 +175,7 @@ class OnlineScoreRequest():
     birthday = BirthDayField(required=False, nullable=True)
     gender = GenderField(required=False, nullable=True)
 
-    def __init__(self, **kwargs):
+    def __init__(self, kwargs):
         self.first_name = kwargs.get('first_name', None)
         self.last_name = kwargs.get('last_name', None)
         self.email = kwargs.get('email', None)
@@ -187,7 +191,7 @@ class MethodRequest():
     arguments = ArgumentsField(required=True, nullable=True)
     method = CharField(required=True, nullable=False)
 
-    def __init__(self, **kwargs):
+    def __init__(self, kwargs):
         self.account = kwargs.get('account', None)
         self.login = kwargs.get('login', None)
         self.token = kwargs.get('token', None)
