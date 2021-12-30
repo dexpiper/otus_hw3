@@ -1,7 +1,7 @@
 import random
 
 
-def get_score(store=None, phone=None, email=None, birthday=None,
+def get_score(store, phone=None, email=None, birthday=None,
               gender=None, first_name=None,
               last_name=None) -> float:
     score = 0

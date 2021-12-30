@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 import re
 
-from api import FEMALE, MALE, UNKNOWN
+from api import FEMALE, MALE, UNKNOWN, ADMIN_LOGIN
 
 
 class Validator(ABC):
@@ -158,6 +158,10 @@ class ClientsInterestsRequest():
     client_ids = ClientIDsField(required=True, nullable=False)
     date = DateField(required=False, nullable=True)
 
+    def __init__(self, **kwargs):
+        self.date = kwargs.get('date', None)
+        self.clientids = kwargs.get('clientids', None)
+
 
 class OnlineScoreRequest():
     first_name = CharField(required=False, nullable=True)
@@ -167,6 +171,14 @@ class OnlineScoreRequest():
     birthday = BirthDayField(required=False, nullable=True)
     gender = GenderField(required=False, nullable=True)
 
+    def __init__(self, **kwargs):
+        self.first_name = kwargs.get('first_name', None)
+        self.last_name = kwargs.get('last_name', None)
+        self.email = kwargs.get('email', None)
+        self.phone = kwargs.get('phone', None)
+        self.birthday = kwargs.get('birthday', None)
+        self.gender = kwargs.get('gender', None)
+
 
 class MethodRequest():
     account = CharField(required=False, nullable=True)
@@ -174,3 +186,14 @@ class MethodRequest():
     token = CharField(required=True, nullable=True)
     arguments = ArgumentsField(required=True, nullable=True)
     method = CharField(required=True, nullable=False)
+
+    def __init__(self, **kwargs):
+        self.account = kwargs.get('account', None)
+        self.login = kwargs.get('login', None)
+        self.token = kwargs.get('token', None)
+        self.arguments = kwargs.get('arguments', None)
+        self.method = kwargs.get('method', None)
+
+    @property
+    def is_admin(self):
+        return self.login == ADMIN_LOGIN

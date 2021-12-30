@@ -1,6 +1,6 @@
 import unittest
 
-from utils import thetypes as t
+import thetypes as t
 from tests.utils import cases
 
 
