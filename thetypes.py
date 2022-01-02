@@ -10,7 +10,9 @@ class FieldError(Exception):
 
 
 class Validator(ABC):
-
+    """
+    Data-descriptor and base class for field descriptors.
+    """
     def __set_name__(self, owner, name):
         self.name = name
         self.private_name = '_' + name
