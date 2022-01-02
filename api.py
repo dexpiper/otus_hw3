@@ -41,21 +41,25 @@ def online_score_handler(args: dict, ctx: dict, store,
     try:
         request = OnlineScoreRequest(args)
     except FieldError as exc:
+        logging.debug('Invalid request. Exception: %s' % exc)
         return str(exc), INVALID_REQUEST
-    request.has = [
-        name for name, value in request.__dict__.items()
-        if not name.startswith('_') and value
+    has = [
+        # only private_names in request.__dict__.items() -
+        # name[1:] deletes first "_" from name
+        name[1:] for name, value in request.__dict__.items()
+        if value is not None
     ]
-    ctx.update(has=request.has)
+    ctx.update(has=has)
     condition = any((
-            'phone' and 'email' in request.has,
-            'first_name' and 'last_name' in request.has,
-            'gender' and 'birthday' in request.has
+            ('phone' in has) and ('email' in has),
+            ('first_name' in has) and ('last_name' in has),
+            ('gender' in has) and ('birthday' in has)
         ))
     if not condition:
-        response = ('Please provide more information '
-                    'about client in your request. At least pairs: '
-                    'phone-email, first-last names, gender-birthday')
+        response = ('Please provide more client details in arg field')
+        logging.debug('Insufficient online_score request: %s' % has)
+        logging.debug('Pairs expected: phone-email, first-last names,'
+                      'gender-birthday')
         return response, INVALID_REQUEST
     score = get_score(store, phone=request.phone, email=request.email,
                       birthday=request.birthday, first_name=request.first_name,
@@ -71,6 +75,7 @@ def clients_interests_handler(args: dict, ctx: dict, store,
     try:
         request = ClientsInterestsRequest(args)
     except FieldError as exc:
+        logging.debug('Invalid request. Exception: %s' % exc)
         return str(exc), INVALID_REQUEST
     nclients = len(request.client_ids)
     ctx.update(nclients=nclients)
@@ -89,6 +94,7 @@ def method_handler(request: dict, ctx: dict, store) -> tuple:
     try:
         method_request = MethodRequest(data)
     except FieldError as exc:
+        logging.debug('Invalid request. Exception: %s' % exc)
         return str(exc), INVALID_REQUEST
 
     if not check_auth(method_request):
@@ -100,9 +106,12 @@ def method_handler(request: dict, ctx: dict, store) -> tuple:
     if method not in methods:
         response = f'Invalid method name ({method}) in field method'
         code = NOT_FOUND
+        logging.debug('Bad method name: %s' % method)
         return response, code
+    logging.info('Calling %s' % methods[method])
     response, code = methods[method](method_request.arguments, ctx,
                                      store, is_admin=method_request.is_admin)
+    logging.debug('ctx is: %s' % ctx)
     return response, code
 
 

@@ -94,7 +94,10 @@ class PhoneField(Field):
 
     def __set__(self, obj, value):
         self.validate(value)
-        setattr(obj, self.private_name, str(value))
+        if value:
+            setattr(obj, self.private_name, str(value))
+        else:
+            setattr(obj, self.private_name, value)
 
 
 class DateField(CharField):

@@ -107,7 +107,8 @@ class TestSuite(unittest.TestCase):
         }
         self.set_valid_auth(request)
         response, code = self.get_response(request)
-        self.assertEqual(INVALID_REQUEST, code, arguments)
+        self.assertEqual(INVALID_REQUEST, code,
+                         f'Failed with {arguments}. Response: {response}')
         self.assertTrue(len(response))
 
     @cases([
@@ -133,13 +134,17 @@ class TestSuite(unittest.TestCase):
         }
         self.set_valid_auth(request)
         response, code = self.get_response(request)
-        self.assertEqual(OK, code, arguments)
+        self.assertEqual(OK, code,
+                         f'Failed with {arguments}. Response: {response}')
         score = response.get("score")
         self.assertTrue(
             isinstance(score, (int, float)) and score >= 0,
             arguments
         )
-        self.assertEqual(sorted(self.context["has"]), sorted(arguments.keys()))
+        self.assertEqual(
+            sorted(self.context["has"]),
+            sorted(arguments.keys()),
+            f'Original request: {arguments}')
 
     def test_ok_score_admin_request(self):
         arguments = {"phone": "79175002040", "email": "stupnikov@otus.ru"}
@@ -149,7 +154,8 @@ class TestSuite(unittest.TestCase):
         }
         self.set_valid_auth(request)
         response, code = self.get_response(request)
-        self.assertEqual(OK, code)
+        self.assertEqual(OK, code,
+                         f'Failed with {arguments}. Response: {response}')
         score = response.get("score")
         self.assertEqual(score, 42)
 
