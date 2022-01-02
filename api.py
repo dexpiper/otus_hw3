@@ -61,9 +61,12 @@ def online_score_handler(args: dict, ctx: dict, store,
         logging.debug('Pairs expected: phone-email, first-last names,'
                       'gender-birthday')
         return response, INVALID_REQUEST
-    score = get_score(store, phone=request.phone, email=request.email,
-                      birthday=request.birthday, first_name=request.first_name,
-                      last_name=request.last_name)
+    dct = dict(phone=request.phone, email=request.email,
+               birthday=request.birthday, gender=request.gender,
+               first_name=request.first_name,
+               last_name=request.last_name)
+    logging.debug(f'Score requested with: {dct}')
+    score = get_score(store, **dct)
     score = score if not is_admin else 42
     response = dict(score=score)
     code = OK
@@ -164,7 +167,7 @@ class MainHTTPHandler(BaseHTTPRequestHandler):
             }
         context.update(r)
         logging.info(context)
-        self.wfile.write(json.dumps(r))
+        self.wfile.write(json.dumps(r).encode(encoding='utf-8'))
         return
 
 
