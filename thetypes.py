@@ -163,16 +163,35 @@ class ClientIDsField(Field):
             raise FieldError(err_message)
 
 
-class ClientsInterestsRequest():
+class Request:
+    reserved_properties = ['is_admin']
+
+    def __init__(self, dct: dict, default=None):
+        '''
+        Default request initializer from a dict.
+
+        >>> r = Request({'attr1': 'value', 'attr2': 'value'})
+
+        Any properties in the children Requsets should be defined
+        in the <reserved_properties> base class var to avoid AttributeError
+        '''
+        attrs = [
+                    key for key in dir(self)
+                    if not any((
+                        key.startswith('_'),
+                        key in Request.reserved_properties
+                    ))
+                ]
+        for attr in attrs:
+            setattr(self, attr, dct.get(attr, default))
+
+
+class ClientsInterestsRequest(Request):
     client_ids = ClientIDsField(required=True, nullable=False)
     date = DateField(required=False, nullable=True)
 
-    def __init__(self, kwargs):
-        self.date = kwargs.get('date', None)
-        self.client_ids = kwargs.get('client_ids', None)
 
-
-class OnlineScoreRequest():
+class OnlineScoreRequest(Request):
     first_name = CharField(required=False, nullable=True)
     last_name = CharField(required=False, nullable=True)
     email = EmailField(required=False, nullable=True)
@@ -180,28 +199,13 @@ class OnlineScoreRequest():
     birthday = BirthDayField(required=False, nullable=True)
     gender = GenderField(required=False, nullable=True)
 
-    def __init__(self, kwargs):
-        self.first_name = kwargs.get('first_name', None)
-        self.last_name = kwargs.get('last_name', None)
-        self.email = kwargs.get('email', None)
-        self.phone = kwargs.get('phone', None)
-        self.birthday = kwargs.get('birthday', None)
-        self.gender = kwargs.get('gender', None)
 
-
-class MethodRequest():
+class MethodRequest(Request):
     account = CharField(required=False, nullable=True)
     login = CharField(required=True, nullable=True)
     token = CharField(required=True, nullable=True)
     arguments = ArgumentsField(required=True, nullable=True)
     method = CharField(required=True, nullable=False)
-
-    def __init__(self, kwargs):
-        self.account = kwargs.get('account', None)
-        self.login = kwargs.get('login', None)
-        self.token = kwargs.get('token', None)
-        self.arguments = kwargs.get('arguments', None)
-        self.method = kwargs.get('method', None)
 
     @property
     def is_admin(self):
