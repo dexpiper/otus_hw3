@@ -4,7 +4,7 @@ import unittest
 
 from api import method_handler
 from tests.utils import cases
-from vars import ADMIN_LOGIN, ADMIN_SALT, SALT, INVALID_REQUEST, FORBIDDEN, OK
+from const import ADMIN_LOGIN, ADMIN_SALT, SALT, INVALID_REQUEST, FORBIDDEN, OK
 
 
 class TestSuite(unittest.TestCase):

@@ -11,8 +11,8 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from thetypes import (ClientsInterestsRequest, FieldError, OnlineScoreRequest,
                       MethodRequest)
 from scoring import get_interests, get_score
-from vars import (ADMIN_SALT, SALT, INVALID_REQUEST, OK, FORBIDDEN,
-                  NOT_FOUND, BAD_REQUEST, INTERNAL_ERROR, ERRORS)
+from const import (ADMIN_SALT, SALT, INVALID_REQUEST, OK, FORBIDDEN,
+                   NOT_FOUND, BAD_REQUEST, INTERNAL_ERROR, ERRORS)
 
 
 def check_auth(request) -> bool:

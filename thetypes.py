@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 import re
 
-from vars import FEMALE, MALE, UNKNOWN, ADMIN_LOGIN
+from const import FEMALE, MALE, UNKNOWN, ADMIN_LOGIN
 
 
 class FieldError(Exception):
