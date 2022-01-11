@@ -55,10 +55,6 @@ class CharField(Field):
         if not isinstance(value, (str, type(None))):
             raise FieldError(f'Field {self.name} should be a str')
 
-    def __set__(self, obj, value):
-        self.validate(value)
-        setattr(obj, self.private_name, value)
-
 
 class ArgumentsField(Field):
 
@@ -169,12 +165,12 @@ class ClientIDsField(Field):
 class Request:
 
     def __init__(self, dct: dict, default=None):
-        '''
+        """
         Initialize request from a dict. Usage:
         r = Request(
             {'attr1': 'value', 'attr2': 'value'}
         )
-        '''
+        """
         attrs = [
                     key for key in dir(self)
                     if isinstance(
