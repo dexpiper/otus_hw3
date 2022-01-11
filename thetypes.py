@@ -195,7 +195,7 @@ class Request:
             setattr(self, attr, self._dct.get(attr, self._default))
 
     @property
-    def fields(self):
+    def fields(self) -> list:
         return self._attrs
 
 
