@@ -178,21 +178,25 @@ class Request:
         >>> r = Request({}, validate=False)
         >>> r.validate()
         """
-        self.__attrs = [
-                    key for key in dir(self)
-                    if isinstance(
-                        getattr(type(self), key),  # returns the descriptor
-                        Field
-                    )
-                ]
-        self.__dct = dct
-        self.__default = default
+        self._attrs = [
+            key for key in dir(self)
+            if isinstance(
+                getattr(type(self), key),  # returns the descriptor
+                Field
+            )
+        ]
+        self._dct = dct
+        self._default = default
         if validate:
             self.validate()
 
     def validate(self):
-        for attr in self.__attrs:
-            setattr(self, attr, self.__dct.get(attr, self.__default))
+        for attr in self._attrs:
+            setattr(self, attr, self._dct.get(attr, self._default))
+
+    @property
+    def fields(self):
+        return self._attrs
 
 
 class ClientsInterestsRequest(Request):

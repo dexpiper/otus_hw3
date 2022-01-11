@@ -44,13 +44,8 @@ def online_score_handler(args: dict, ctx: dict, store,
         logging.debug('Invalid request. Exception: %s' % exc)
         return str(exc), INVALID_REQUEST
     has = [
-        # only private_names in request.__dict__.items() -
-        # name[1:] deletes first "_" from name
-        name[1:] for name, value in request.__dict__.items()
-        if all((
-            value is not None,
-            not name.startswith('__')
-        ))
+        name for name in request.fields
+        if getattr(request, name) is not None
     ]
     ctx.update(has=has)
     condition = any((
