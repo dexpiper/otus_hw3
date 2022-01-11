@@ -1,8 +1,9 @@
+import re
 from abc import ABC, abstractmethod
 from datetime import datetime
-import re
+from typing import Any
 
-from const import FEMALE, MALE, UNKNOWN, ADMIN_LOGIN
+from const import ADMIN_LOGIN, FEMALE, MALE, UNKNOWN
 
 
 class FieldError(Exception):
@@ -164,22 +165,34 @@ class ClientIDsField(Field):
 
 class Request:
 
-    def __init__(self, dct: dict, default=None):
+    def __init__(self, dct: dict,
+                 validate: bool = True,
+                 default: Any = None):
         """
         Initialize request from a dict. Usage:
-        r = Request(
-            {'attr1': 'value', 'attr2': 'value'}
-        )
+        >>> r = Request({'attr1': 'value', 'attr2': 'value'})
+
+        Validation could be postponed with <validate> flag turned to False.
+        In this case initialized Request object (with dict already installed)
+        should be validated:
+        >>> r = Request({}, validate=False)
+        >>> r.validate()
         """
-        attrs = [
+        self.__attrs = [
                     key for key in dir(self)
                     if isinstance(
                         getattr(type(self), key),  # returns the descriptor
                         Field
                     )
                 ]
-        for attr in attrs:
-            setattr(self, attr, dct.get(attr, default))
+        self.__dct = dct
+        self.__default = default
+        if validate:
+            self.validate()
+
+    def validate(self):
+        for attr in self.__attrs:
+            setattr(self, attr, self.__dct.get(attr, self.__default))
 
 
 class ClientsInterestsRequest(Request):

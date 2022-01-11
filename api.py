@@ -47,7 +47,10 @@ def online_score_handler(args: dict, ctx: dict, store,
         # only private_names in request.__dict__.items() -
         # name[1:] deletes first "_" from name
         name[1:] for name, value in request.__dict__.items()
-        if value is not None
+        if all((
+            value is not None,
+            not name.startswith('__')
+        ))
     ]
     ctx.update(has=has)
     condition = any((
