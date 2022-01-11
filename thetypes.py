@@ -18,6 +18,9 @@ class Validator(ABC):
         self.private_name = '_' + name
 
     def __get__(self, obj, objtype=None):
+        if obj is None:
+            # instance attribute accessed on class
+            return self
         return getattr(obj, self.private_name)
 
     def __set__(self, obj, value):
@@ -164,23 +167,20 @@ class ClientIDsField(Field):
 
 
 class Request:
-    reserved_properties = ['is_admin']
 
     def __init__(self, dct: dict, default=None):
         '''
-        Default request initializer from a dict.
-
-        >>> r = Request({'attr1': 'value', 'attr2': 'value'})
-
-        Any properties in the children Requsets should be defined
-        in the <reserved_properties> base class var to avoid AttributeError
+        Initialize request from a dict. Usage:
+        r = Request(
+            {'attr1': 'value', 'attr2': 'value'}
+        )
         '''
         attrs = [
                     key for key in dir(self)
-                    if not any((
-                        key.startswith('_'),
-                        key in Request.reserved_properties
-                    ))
+                    if isinstance(
+                        getattr(type(self), key),  # returns the descriptor
+                        Field
+                    )
                 ]
         for attr in attrs:
             setattr(self, attr, dct.get(attr, default))
