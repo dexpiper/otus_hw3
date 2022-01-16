@@ -3,6 +3,7 @@ import unittest
 from thetypes import (Field, CharField, ArgumentsField, EmailField,
                       MethodRequest, PhoneField, DateField, BirthDayField,
                       GenderField, ClientIDsField, FieldError, Request)
+from const import ADMIN_LOGIN
 from tests.utils import cases
 
 
@@ -15,7 +16,7 @@ kwargs = dict(required=False, nullable=True)  # the most unpretentious options
 class R:
     """
     A dummy class emulating real Field instantiation from a
-    dict named <kwargs>. R contains all possible fields.
+    dict. R contains all possible fields.
     """
     field = Field(**kwargs)
     charfield = CharField(**kwargs)
@@ -27,16 +28,16 @@ class R:
     gender = GenderField(**kwargs)
     clientids = ClientIDsField(**kwargs)
 
-    def __init__(self, **kwargs):
-        self.field = kwargs.get('field', None)
-        self.charfield = kwargs.get('charfield', None)
-        self.argfield = kwargs.get('argfield', None)
-        self.email = kwargs.get('email', None)
-        self.phone = kwargs.get('phone', None)
-        self.date = kwargs.get('date', None)
-        self.birthday = kwargs.get('birthday', None)
-        self.gender = kwargs.get('gender', None)
-        self.clientids = kwargs.get('clientids', None)
+    def __init__(self, **dct):
+        self.field = dct.get('field', None)
+        self.charfield = dct.get('charfield', None)
+        self.argfield = dct.get('argfield', None)
+        self.email = dct.get('email', None)
+        self.phone = dct.get('phone', None)
+        self.date = dct.get('date', None)
+        self.birthday = dct.get('birthday', None)
+        self.gender = dct.get('gender', None)
+        self.clientids = dct.get('clientids', None)
 
 
 class TestField(unittest.TestCase):
@@ -231,15 +232,22 @@ class TestRequest(unittest.TestCase):
         for f in self.simple_fields:
             self.assertEqual(getattr(r, f), def_value)
 
-    def test_with_a_random_dict(self):
+    def test_undemanding_with_random_dict(self):
         dct = dict(nobody_expects=' ===> Spanish Inquisition')
         r = Req(dct)
-        r.validate
         for f in self.req_fields:
             # should be no errors, just None in all the Fields
             self.assertEqual(getattr(r, f), None)
 
-    def test_method_request(self):
+    def test_demanding_with_random_dict(self):
+        dct = dict(nobody_expects=' ===> Spanish Inquisition')
+        with self.assertRaises(FieldError):
+            Demanding(dct)
+
+
+class TestMethodRequest(unittest.TestCase):
+
+    def test_good_method_request(self):
         dct = dict(
             account='hoofs', login='h&h', token='spam',
             arguments={'spam': 'witheggs'},
@@ -248,3 +256,27 @@ class TestRequest(unittest.TestCase):
         r = MethodRequest(dct)
         for key, value in dct.items():
             self.assertEqual(getattr(r, key), value)
+
+    def test_bad_method_request(self):
+        dct = dict(nobody_expects=' ===> Spanish Inquisition')
+        with self.assertRaises(FieldError):
+            MethodRequest(dct)
+
+    @cases(['horns&hoofs', 'ADMIN', 'theboss', 'King Arthur'])
+    def test_method_request_not_admin_login(self, login):
+        dct = dict(
+            account='hoofs', login=login, token='spam',
+            arguments={'spam': 'witheggs'},
+            method='eggswithspam'
+        )
+        r = MethodRequest(dct)
+        self.assertFalse(r.is_admin)
+
+    def test_method_request_valid_admin_login(self):
+        dct = dict(
+            account='hoofs', login=ADMIN_LOGIN, token='spam',
+            arguments={'spam': 'witheggs'},
+            method='eggswithspam'
+        )
+        r = MethodRequest(dct)
+        self.assertTrue(r.is_admin)
