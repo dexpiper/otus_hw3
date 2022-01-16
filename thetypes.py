@@ -177,6 +177,9 @@ class Request:
         should be validated:
         >>> r = Request({}, validate=False)
         >>> r.validate()
+
+        Warning: change default value (self.default) only if all the Fields in
+        request accespt that value. Beware of FieldError.
         """
         self._attrs = [
             key for key in dir(self)
