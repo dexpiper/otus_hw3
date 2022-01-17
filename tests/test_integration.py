@@ -1,6 +1,7 @@
 import hashlib
 import datetime
 import unittest
+from unittest.mock import MagicMock
 
 from api import method_handler
 from database import RedisStore
@@ -13,12 +14,23 @@ class TestSuite(unittest.TestCase):
         self.context = {}
         self.headers = {}
         self.store = RedisStore(db=3)
+        self.mocked_store = RedisStore(db=2)
+        self.mocked_store.r.get = MagicMock(
+            return_value=b'["cars", "boats", "gardening"]'
+        )
 
     def get_response(self, request):
         return method_handler(
             {"body": request, "headers": self.headers},
             self.context,
             self.store
+        )
+
+    def get_mockstore_response(self, request):
+        return method_handler(
+            {"body": request, "headers": self.headers},
+            self.context,
+            self.mocked_store
         )
 
     def set_valid_auth(self, request):
@@ -174,7 +186,7 @@ class TestSuite(unittest.TestCase):
             "method": "clients_interests", "arguments": arguments
         }
         self.set_valid_auth(request)
-        response, code = self.get_response(request)
+        response, code = self.get_mockstore_response(request)
         self.assertEqual(INVALID_REQUEST, code, arguments)
         self.assertTrue(len(response))
 
@@ -193,7 +205,7 @@ class TestSuite(unittest.TestCase):
             "arguments": arguments
         }
         self.set_valid_auth(request)
-        response, code = self.get_response(request)
+        response, code = self.get_mockstore_response(request)
         self.assertEqual(OK, code, arguments)
         self.assertEqual(len(arguments["client_ids"]), len(response))
         self.assertTrue(

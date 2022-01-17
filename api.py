@@ -82,7 +82,7 @@ def clients_interests_handler(args: dict, ctx: dict, store,
     nclients = len(request.client_ids)
     ctx.update(nclients=nclients)
     response = {
-        id: get_interests(store, cid=None)
+        id: get_interests(store, cid=id)
         for id in request.client_ids
     }
     code = OK
