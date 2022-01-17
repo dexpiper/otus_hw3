@@ -35,10 +35,10 @@ class TestRedisStore(unittest.TestCase):
         self.assertEqual(store.cache['eggs'], 'spam')
 
     def test_cache_ttl_check(self):
-        short_cache_store = RedisStore(db=3, ttl=1)
+        short_cache_store = RedisStore(db=3, ttl=0.1)
         short_cache_store.cache_set('breakfast', 'eggs')
         self.assertEqual(short_cache_store.cache.get('breakfast'), 'eggs')
-        sleep(1)
+        sleep(0.1)
         self.assertEqual(
             short_cache_store.cache.get('breakfast', 'SPAM'), 'SPAM'
         )

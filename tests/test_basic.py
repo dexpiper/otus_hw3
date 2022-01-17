@@ -3,6 +3,7 @@ import datetime
 import unittest
 
 from api import method_handler
+from database import RedisStore
 from tests.utils import cases
 from const import ADMIN_LOGIN, ADMIN_SALT, SALT, INVALID_REQUEST, FORBIDDEN, OK
 
@@ -11,13 +12,13 @@ class TestSuite(unittest.TestCase):
     def setUp(self):
         self.context = {}
         self.headers = {}
-        self.settings = {}
+        self.store = RedisStore(db=3)
 
     def get_response(self, request):
         return method_handler(
             {"body": request, "headers": self.headers},
             self.context,
-            self.settings
+            self.store
         )
 
     def set_valid_auth(self, request):
@@ -208,3 +209,6 @@ class TestSuite(unittest.TestCase):
             self.context.get("nclients"),
             len(arguments["client_ids"])
         )
+
+    def tearDown(self):
+        self.store.r.flushdb()

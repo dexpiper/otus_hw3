@@ -17,6 +17,9 @@ class RedisStore:
                  logger=logging.getLogger(__name__)):
         """
         Init a RedisStore object.
+        * By default, cache TTL set on 60 minutes.
+        * Using default database num. 0, standart Redis port and
+        localhost.
         """
         self.r = redis.Redis(host=host, port=port, db=db,
                              password=password,

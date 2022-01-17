@@ -10,6 +10,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 
 from thetypes import (ClientsInterestsRequest, FieldError, OnlineScoreRequest,
                       MethodRequest)
+from database import RedisStore
 from scoring import get_interests, get_score
 from const import (ADMIN_SALT, SALT, INVALID_REQUEST, OK, FORBIDDEN,
                    NOT_FOUND, BAD_REQUEST, INTERNAL_ERROR, ERRORS)
@@ -120,7 +121,7 @@ class MainHTTPHandler(BaseHTTPRequestHandler):
     router = {
         "method": method_handler
     }
-    store = None
+    store = RedisStore()
 
     def get_request_id(self, headers):
         return headers.get('HTTP_X_REQUEST_ID', uuid.uuid4().hex)
