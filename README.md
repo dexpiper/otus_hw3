@@ -114,11 +114,17 @@ To run unit tests, run:
 
 `$ python3 tests.py [testfile, optional (default: all tests)] [-v, --verbose]`
 
-Currently 2 test files provided:
+3 test files provided:
 
-* *basic* - comes with homework assignment
-* *fields* - test for fields classes
+* *integration*
+* *fields*
+* *store*
 
 Optional arg -v (--verbose) can be used to get a more verbose answer.
 
-` Ran 26 tests in 0.011s OK `
+For test correct work a **Redis server should be started locally** with default params:
+
+* host: localhost
+* port: 6379
+
+`$ redis-server`
