@@ -38,28 +38,41 @@ class TestRedisStore(unittest.TestCase):
         self.assertEqual(store.cache['eggs'], 'spam')
 
     def test_cache_ttl_check(self):
+        """
+        TTL explicitly set in 1 sec
+        """
         short_cache_store = RedisStore(db=3, ttl=1)
         short_cache_store.cache_set('breakfast', 'eggs')
         self.assertEqual(
             short_cache_store.cache.get('breakfast'),
             'eggs'
         )
-        sleep(1)
+        sleep(1)  # after 1 sec value should be flushed off
         self.assertIsNone(
             short_cache_store.cache.get('breakfast')
         )
 
     def test_cache_get_from_db_natural(self):
+        """
+        Store.cache_get() can only take 'Foo' from db, not from cache
+        """
         self.assertTrue(self.store.set('Foo', 'bar'))
         self.assertEqual(self.store.cache_get('Foo'), 'bar')
 
     def test_cache_get_from_db_mock(self):
+        """
+        Retry previous test with mock: the cache calls 'real' db
+        if it cannot find value
+        """
         self.store.r.get = MagicMock(return_value='value')
         value = self.store.cache_get('foo')
         self.assertEqual(value, 'value')
         self.store.r.get.assert_called_once_with('foo')
 
     def test_cache_get_from_cache(self):
+        """
+        Vice versa: the cache should NOT call 'real' db
+        """
         self.store.cache_set('SomeKey', 'spam')
         self.store.r.get = MagicMock(return_value=LookupError('Not expected'))
         v = self.store.cache_get('SomeKey')

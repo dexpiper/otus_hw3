@@ -5,6 +5,7 @@ import redis
 from datetime import timedelta
 import logging
 import time
+import random
 
 
 class RedisStore:
@@ -33,6 +34,10 @@ class RedisStore:
         if connect:
             self.r = self._connect(self.db)
             self.cache = self._connect(self.db_cache)
+            try:
+                all((self.r.ping(), self.cache.ping()))
+            except redis.exceptions.ConnectionError:
+                raise
 
     def _connect(self, db):
         return redis.Redis(host=self.host, port=self.port, db=db,
@@ -45,12 +50,12 @@ class RedisStore:
             conn = storage.ping()
         except redis.exceptions.ConnectionError:
             self.logger.info(f'Cannot connect to {store_name}. Reconnecting')
-            for _ in range(self.max_retry):
+            for i in range(self.max_retry):
                 try:
                     storage = self._connect(db)
                     conn = storage.ping()
                 except:  # noqa E722 (flake8 enable bare except)
-                    time.sleep(1)
+                    time.sleep(random.randint(5, 15)/10 + i/2)
             if not conn:
                 raise ConnectionError('Cannot connect to cache')
 
