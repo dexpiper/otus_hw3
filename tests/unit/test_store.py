@@ -32,15 +32,18 @@ class TestRedisStore(unittest.TestCase):
     def test_cache_set(self):
         store = RedisStore(db=3)
         store.cache_set('eggs', 'spam')
-        self.assertEqual(store.cache['eggs'], 'spam')
+        self.assertEqual(store.cache['eggs'].decode('utf-8'), 'spam')
 
     def test_cache_ttl_check(self):
-        short_cache_store = RedisStore(db=3, ttl=0.1)
+        short_cache_store = RedisStore(db=3, ttl=1)
         short_cache_store.cache_set('breakfast', 'eggs')
-        self.assertEqual(short_cache_store.cache.get('breakfast'), 'eggs')
-        sleep(0.1)
         self.assertEqual(
-            short_cache_store.cache.get('breakfast', 'SPAM'), 'SPAM'
+            short_cache_store.cache.get('breakfast').decode('utf-8'),
+            'eggs'
+        )
+        sleep(1)
+        self.assertIsNone(
+            short_cache_store.cache.get('breakfast')
         )
 
     def test_cache_get_from_db_natural(self):

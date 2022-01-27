@@ -5,8 +5,6 @@ import redis
 from datetime import timedelta
 import logging
 
-from cachetools import TTLCache
-
 
 class RedisStore:
 
@@ -14,21 +12,34 @@ class RedisStore:
                  db: int = 0, password: str or None = None,
                  socket_timeout: float or None = None,
                  ttl=timedelta(minutes=60).seconds,
-                 logger=logging.getLogger(__name__)):
+                 logger=logging.getLogger(__name__),
+                 connect: bool = True):
         """
         Init a RedisStore object.
         * By default, cache TTL set on 60 minutes.
         * Using default database num. 0, standart Redis port and
         localhost.
         """
-        self.r = redis.Redis(host=host, port=port, db=db,
-                             password=password,
-                             socket_timeout=socket_timeout)
-        self.cache = TTLCache(maxsize=10, ttl=ttl)
+        self.host = host
+        self.port = port
+        self.db = db
+        self.password = password
+        self.socket_timeout = socket_timeout
         self.logger = logger
+        self.ttl = ttl
+        if connect:
+            self._connect()
+
+    def _connect(self):
+        self.r = redis.Redis(host=self.host, port=self.port, db=self.db,
+                             password=self.password,
+                             socket_timeout=self.socket_timeout)
+        self.cache = redis.Redis(host=self.host, port=self.port, db=self.db+1,
+                                 password=self.password,
+                                 socket_timeout=self.socket_timeout)
 
     def cache_get(self, key: str) -> str:
-        value = self.cache.get(key, None)
+        value: bytes = self.cache.get(key) or None
         if not value:
             self.logger.debug('Key not in cache, trying to get from db')
             try:
@@ -38,7 +49,7 @@ class RedisStore:
         return value.decode('utf-8') if isinstance(value, bytes) else value
 
     def cache_set(self, key: str, value: str):
-        self.cache[key] = value
+        self.cache.set(key, value, ex=self.ttl)
 
     def get(self, key: str) -> str:
         value: bytes = self.r.get(key)
