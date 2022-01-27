@@ -1,6 +1,7 @@
+import os
 import unittest
-from unittest.mock import MagicMock
 from time import sleep
+from unittest.mock import MagicMock
 
 from database import RedisStore
 from tests.utils import cases
@@ -9,7 +10,9 @@ from tests.utils import cases
 class TestRedisStore(unittest.TestCase):
 
     def setUp(self):
-        self.store = RedisStore(db=3)
+        redis_url = os.environ.get('REDIS_URL', 'localhost:6379')
+        host, port = redis_url.split(':')
+        self.store = RedisStore(host=host, port=port, db=3, socket_timeout=0.3)
 
     def test_basic_init(self):
         self.assertTrue(isinstance(self.store.r, object))
@@ -32,13 +35,13 @@ class TestRedisStore(unittest.TestCase):
     def test_cache_set(self):
         store = RedisStore(db=3)
         store.cache_set('eggs', 'spam')
-        self.assertEqual(store.cache['eggs'].decode('utf-8'), 'spam')
+        self.assertEqual(store.cache['eggs'], 'spam')
 
     def test_cache_ttl_check(self):
         short_cache_store = RedisStore(db=3, ttl=1)
         short_cache_store.cache_set('breakfast', 'eggs')
         self.assertEqual(
-            short_cache_store.cache.get('breakfast').decode('utf-8'),
+            short_cache_store.cache.get('breakfast'),
             'eggs'
         )
         sleep(1)
@@ -65,3 +68,4 @@ class TestRedisStore(unittest.TestCase):
 
     def tearDown(self):
         self.store.r.flushdb()
+        self.store.cache.flushdb()

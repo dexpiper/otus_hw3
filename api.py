@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+import os
 import hashlib
 import datetime
 import json
@@ -121,7 +122,9 @@ class MainHTTPHandler(BaseHTTPRequestHandler):
     router = {
         "method": method_handler
     }
-    store = RedisStore()
+    redis_url = os.environ.get('REDIS_URL', 'localhost:6379')
+    host, port = redis_url.split(':')
+    store = RedisStore(host=host, port=port)
 
     def get_request_id(self, headers):
         return headers.get('HTTP_X_REQUEST_ID', uuid.uuid4().hex)

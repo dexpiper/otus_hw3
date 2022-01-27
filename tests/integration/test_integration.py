@@ -1,3 +1,4 @@
+import os
 import hashlib
 import datetime
 import unittest
@@ -13,7 +14,9 @@ class TestSuite(unittest.TestCase):
     def setUp(self):
         self.context = {}
         self.headers = {}
-        self.store = RedisStore(db=3)
+        redis_url = os.environ.get('REDIS_URL', 'localhost:6379')
+        host, port = redis_url.split(':')
+        self.store = RedisStore(host, port, db=3, socket_timeout=0.3)
         self.mocked_store = RedisStore(db=2)
         self.mocked_store.r.get = MagicMock(
             return_value=b'["cars", "boats", "gardening"]'
@@ -224,3 +227,4 @@ class TestSuite(unittest.TestCase):
 
     def tearDown(self):
         self.store.r.flushdb()
+        self.store.cache.flushdb()

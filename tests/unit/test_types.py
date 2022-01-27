@@ -13,9 +13,9 @@ from tests.utils import cases
 kwargs = dict(required=False, nullable=True)  # the most unpretentious options
 
 
-class R:
+class DummyClass:
     """
-    A dummy class emulating real Field instantiation from a
+    Emulating real Field instantiation from a
     dict. R contains all possible fields.
     """
     field = Field(**kwargs)
@@ -45,7 +45,7 @@ class TestField(unittest.TestCase):
     Testing fields descriptor machinery via dummy R class.
     """
     def test_basic_field_instantiation(self):
-        r = R(**dict(field='foo'))
+        r = DummyClass(**dict(field='foo'))
         self.assertEqual(r.field, 'foo')
 
     @cases([
@@ -54,79 +54,103 @@ class TestField(unittest.TestCase):
             {}, {'foo': 'bar', 'bar': 'foo'}
         ])
     def test_basic_field(self, value):
-        r = R(**dict(field=value))
+        r = DummyClass(**dict(field=value))
         self.assertEqual(r.field, value)
+
+
+class TestCharField(unittest.TestCase):
 
     @cases(['FOObar', '12345', 'Fafaf81819*&%^@!%$'])
     def test_good_char_field(self, value):
-        r = R(**dict(charfield=value))
+        r = DummyClass(**dict(charfield=value))
         self.assertEqual(r.charfield, value)
 
     @cases([12345, 123456787, [], {'foo': 'bar'}])
     def test_bad_char_field(self, value):
         with self.assertRaises(FieldError):
-            R(**dict(charfield=value))
+            DummyClass(**dict(charfield=value))
+
+
+class TestArgField(unittest.TestCase):
 
     @cases([{'FOObar': '12345'}, {}, {'foobar': 1234, 'spam': 'eggs'}])
     def test_good_arg_field(self, value):
-        r = R(**dict(argfield=value))
+        r = DummyClass(**dict(argfield=value))
         self.assertEqual(r.argfield, value)
 
     @cases(['Foobar', 123456787, []])
     def test_bad_arg_field(self, value):
         with self.assertRaises(FieldError):
-            R(**dict(argfield=value))
+            DummyClass(**dict(argfield=value))
+
+
+class TestEmailField(unittest.TestCase):
 
     @cases(['foo@bar.com', 'stupnikov@otus.ru', 'eggs@spam.uk',
             'all@otus.rocks', 'b@egg.org'])
     def test_good_email(self, value):
-        r = R(**dict(email=value))
+        r = DummyClass(**dict(email=value))
         self.assertEqual(r.email, value)
 
     @cases(['foobar.com', 'Foobar', 'Spam@eggs'])
     def test_bad_email(self, value):
         with self.assertRaises(FieldError):
-            R(**dict(email=value))
+            DummyClass(**dict(email=value))
+
+
+class TestPhoneField(unittest.TestCase):
 
     @cases(['79121233239', 79011122233, '79998887766'])
     def test_good_phone(self, value):
-        r = R(**dict(phone=value))
+        r = DummyClass(**dict(phone=value))
         self.assertEqual(r.phone, str(value))
 
     @cases(['Foobar', 89123456789, '+79201234567', '789012345'])
     def test_bad_phone(self, value):
         with self.assertRaises(FieldError):
-            R(**dict(phone=str(value)))
+            DummyClass(**dict(phone=str(value)))
+
+
+class TestDateField(unittest.TestCase):
 
     @cases(['27.12.2021', '01.01.1982', '06.11.1904'])
     def test_good_date(self, value):
-        r = R(**dict(date=value))
+        r = DummyClass(**dict(date=value))
         self.assertEqual(r.date, value)
 
     @cases(['2712.2021', '01011982', '06.11.19042', 'hello', 42])
     def test_bad_date(self, value):
         with self.assertRaises(FieldError):
-            R(**dict(date=value))
+            DummyClass(**dict(date=value))
+
+
+class TestBirthDayField(unittest.TestCase):
 
     @cases(['27.12.2021', '01.01.1982', '06.11.1958'])
     def test_good_birthday(self, value):
-        r = R(**dict(birthday=value))
+        r = DummyClass(**dict(birthday=value))
         self.assertEqual(r.birthday, value)
 
     @cases(['27.12.1900', '18.09.1867', '01.01.1000', 'Foobar', 42])
     def test_bad_birthday(self, value):
         with self.assertRaises(FieldError):
-            R(**dict(birthday=value))
+            DummyClass(**dict(birthday=value))
+
+
+class TestGenderField(unittest.TestCase):
 
     @cases([1, 2, 0])
     def test_gender(self, value):
-        r = R(**dict(gender=value))
+        r = DummyClass(**dict(gender=value))
         self.assertEqual(r.gender, value)
 
     @cases([3, '1', 'male', 42, '13', -1])
     def test_gender_bad_value(self, value):
         with self.assertRaises(FieldError):
-            R(**dict(gender=value))
+            DummyClass(**dict(gender=value))
+
+
+class TestClientIDsField(unittest.TestCase):
 
     @cases([
             [123, 323, 98765],
@@ -134,7 +158,7 @@ class TestField(unittest.TestCase):
             [42], []
         ])
     def test_clientids(self, value):
-        r = R(**dict(clientids=value))
+        r = DummyClass(**dict(clientids=value))
         self.assertEqual(r.clientids, value)
 
     @cases([
@@ -143,7 +167,7 @@ class TestField(unittest.TestCase):
         ])
     def test_clientids_bad_value(self, value):
         with self.assertRaises(FieldError):
-            R(**dict(clientids=value))
+            DummyClass(**dict(clientids=value))
 
 
 #
