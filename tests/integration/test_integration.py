@@ -152,7 +152,7 @@ class TestSuite(unittest.TestCase):
         score = response.get("score")
         self.assertTrue(
             isinstance(score, (int, float)) and score >= 0,
-            arguments
+            f' *** {score}, {type(score)}'
         )
         self.assertEqual(
             sorted(self.context["has"]),
